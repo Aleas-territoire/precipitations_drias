@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>TRACC +4°C — Pluies intenses par commune</title>
+  <meta name="description" content="Visualisation cartographique des variables de pluies intenses du scénario +4°C de la TRACC pour les communes de France métropolitaine. Données DRIAS."/>
+
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com"/>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet"/>
+  <!-- App CSS -->
+  <link rel="stylesheet" href="css/style.css"/>
+</head>
+<body>
+
+<!-- Loading overlay -->
+<div id="loading">
+  <div class="spinner"></div>
+  <div class="loading-text">Initialisation…</div>
+</div>
+
+<!-- Mobile overlay -->
+<div id="overlay-close"></div>
+
+<!-- Burger button (mobile) -->
+<button id="burger" aria-label="Ouvrir le panneau">☰</button>
+
+<div id="app">
+
+  <!-- ── Sidebar ─────────────────────────────────────────────────────────── -->
+  <aside id="sidebar" role="complementary" aria-label="Panneau de contrôle">
+
+    <!-- Header -->
+    <div id="header">
+      <h1>
+        <span class="tag">TRACC</span>
+        Pluies intenses — +4°C
+      </h1>
+      <div class="subtitle">
+        Projections climatiques DRIAS pour les 35 000 communes de France métropolitaine
+      </div>
+    </div>
+
+    <!-- Body -->
+    <div id="sidebar-body">
+
+      <!-- Search -->
+      <div class="section-title">Recherche</div>
+      <input id="search-box" type="text" placeholder="🔍  Commune ou code INSEE…" autocomplete="off" spellcheck="false"/>
+      <div id="search-results"></div>
+
+      <!-- Mode toggle -->
+      <div class="section-title">Mode de visualisation</div>
+      <div id="mode-toggle">
+        <button class="mode-btn active" data-mode="univar">Univarié</button>
+        <button class="mode-btn" data-mode="bivar">Bivarié ✦</button>
+      </div>
+
+      <!-- Info commune -->
+      <div id="info-panel">
+        <div id="info-name">–</div>
+        <div id="info-insee">–</div>
+        <div id="info-rows"></div>
+      </div>
+
+      <!-- Cumuls section -->
+      <div class="section-title">Cumuls précipitations</div>
+
+      <div class="var-card" data-varkey="drias_Cumu" role="button" tabindex="0">
+        <div class="var-name">Cumul annuel</div>
+        <div class="var-desc">Précipitations totales projetées</div>
+        <div class="var-unit">mm / an</div>
+      </div>
+
+      <div class="var-card" data-varkey="drias_Cu_1" role="button" tabindex="0">
+        <div class="var-name">Cumul hivernal</div>
+        <div class="var-desc">Saison froide DJF (déc. – fév.)</div>
+        <div class="var-unit">mm</div>
+      </div>
+
+      <div class="var-card" data-varkey="drias_Cu_2" role="button" tabindex="0">
+        <div class="var-name">Cumul printanier</div>
+        <div class="var-desc">Printemps MAM (mars – mai)</div>
+        <div class="var-unit">mm</div>
+      </div>
+
+      <div class="var-card" data-varkey="drias_Cu_3" role="button" tabindex="0">
+        <div class="var-name">Cumul estival</div>
+        <div class="var-desc">Été JJA (juin – août) · pluies convectives</div>
+        <div class="var-unit">mm</div>
+      </div>
+
+      <!-- Pluies intenses section -->
+      <div class="section-title">Pluies intenses (TRACC +4°C)</div>
+
+      <div class="var-card" data-varkey="drias_Inte" data-bivar="true" role="button" tabindex="0">
+        <span class="badge badge-bivar">Bivarié</span>
+        <div class="var-name">Intensité maximale</div>
+        <div class="var-desc">Intensité journalière maximale projetée pour les épisodes intenses</div>
+        <div class="var-unit">mm / jour</div>
+      </div>
+
+      <div class="var-card" data-varkey="drias_Fré" data-bivar="true" role="button" tabindex="0">
+        <span class="badge badge-bivar">Bivarié</span>
+        <div class="var-name">Fréquence des épisodes</div>
+        <div class="var-desc">Nombre d'épisodes de pluie intense projetés par an</div>
+        <div class="var-unit">épisodes / an</div>
+      </div>
+
+      <!-- Stats bar -->
+      <div id="stats-bar"></div>
+
+      <!-- Pédagogic note -->
+      <div class="section-title" style="margin-top:20px">À propos</div>
+      <div style="font-size:0.72rem;color:var(--muted);line-height:1.6;margin-bottom:8px">
+        <strong style="color:var(--text)">TRACC</strong> : Trajectoires de Réchauffement de Référence pour l'Adaptation au Changement Climatique.<br><br>
+        Le scénario <strong style="color:var(--text)">+4°C</strong> représente l'horizon de réchauffement le plus élevé, correspondant à l'absence de politiques d'atténuation ambitieuses.<br><br>
+        Les <strong style="color:var(--text)">pluies intenses</strong> désignent les épisodes de précipitations dépassant un seuil statistique élevé. Leur intensité et fréquence sont deux dimensions complémentaires du risque.<br><br>
+        L'analyse <strong style="color:var(--accent2)">bivariée</strong> combine ces deux dimensions dans une même représentation colorée.
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <div id="footer">
+      Données : <a href="https://drias-prod.meteo.fr/" target="_blank" rel="noopener">DRIAS</a> / Météo-France ·
+      Fonds : <a href="https://carto.com/" target="_blank" rel="noopener">CARTO</a> ·
+      Géom. : <a href="https://github.com/gregoiredavid/france-geojson" target="_blank" rel="noopener">france-geojson</a>
+    </div>
+  </aside>
+
+  <!-- ── Map ──────────────────────────────────────────────────────────────── -->
+  <div id="map-container">
+    <div id="map"></div>
+
+    <!-- Légende flottante -->
+    <div id="map-legend">
+      <div id="legend-container"></div>
+      <div id="bivar-legend"></div>
+    </div>
+  </div>
+
+</div>
+
+<!-- Scripts -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<script src="js/config.js"></script>
+<script src="js/legend.js"></script>
+<script src="js/map.js"></script>
+<script src="js/app.js"></script>
+
+</body>
+</html>
