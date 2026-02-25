@@ -2,8 +2,6 @@
 
 Application cartographique responsive et pédagogique pour visualiser les projections de **pluies intenses** du scénario climatique **+4°C de la TRACC** pour les 35 000 communes de France métropolitaine.
 
-👉 **[Démo en ligne](https://votre-username.github.io/tracc-pluies-intenses/)**
-
 ---
 
 ## ✨ Fonctionnalités
